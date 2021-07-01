@@ -1,4 +1,8 @@
 
+variable "api_id" {
+  description = "id for the reply's created api"
+  type        = string
+}
 variable "deploy_environment" {
   description = "test or prod environment"
   type        = string
@@ -16,10 +20,10 @@ variable "repository_name" {
   description = "name of the repository inferred by directory name"
   type        = string
 }
-variable "ssl_certificate_arn" {
-  type        = string
-  description = "ARN of the default SSL server certificate"
-}
+#variable "ssl_certificate_arn" {
+#  type        = string
+#  description = "ARN of the default SSL server certificate"
+#}
 variable "tags" {
   default = {
     Project = "FactoryDataHub"
@@ -35,9 +39,5 @@ variable "vpc_id" {
 variable "vpc_link_id" {
   type        = string
   description = "virtual private cloud descriptor"
-}
-variable "zone_id" {
-  type        = string
-  description = "used by custom domain name"
 }
 
