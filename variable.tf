@@ -13,6 +13,7 @@ variable "lb_name" {
 }
 
 variable "listener_arn" {
+  default     = ""
   description = "listener arn"
   type        = string
 }
