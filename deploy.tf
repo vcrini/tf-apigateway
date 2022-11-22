@@ -60,7 +60,29 @@ resource "aws_api_gateway_integration" "default" {
   integration_http_method = "GET"
   uri                     = "http://bitgdi-test-sandboxecs-inlb-c2ede020b1256ea8.elb.eu-west-1.amazonaws.com"
 }
-
+resource "aws_api_gateway_method_response" "response_200" {
+  rest_api_id     = data.aws_api_gateway_rest_api.primary.id
+  resource_id     = aws_api_gateway_resource.commesse_list2.id
+  http_method     = aws_api_gateway_method.commesse_list2.http_method
+  status_code     = "200"
+  response_models = { "application/json" : "Empty" }
+}
+resource "aws_api_gateway_integration_response" "default" {
+  rest_api_id = data.aws_api_gateway_rest_api.primary.id
+  resource_id = aws_api_gateway_resource.commesse_list2.id
+  http_method = aws_api_gateway_method.commesse_list2.http_method
+  status_code = aws_api_gateway_method_response.response_200.status_code
+  #  # Transforms the backend JSON response to XML
+  #  response_templates = {
+  #    "application/xml" = <<EOF
+  ##set($inputRoot = $input.path('$'))
+  #<?xml version="1.0" encoding="UTF-8"?>
+  #<message>
+  #    $inputRoot.body
+  #</message>
+  #EOF
+  #}
+}
 resource "aws_api_gateway_deployment" "default" {
   rest_api_id = data.aws_api_gateway_rest_api.primary.id
 
