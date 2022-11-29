@@ -49,7 +49,7 @@ resource "aws_api_gateway_usage_plan" "default" {
     stage  = var.stage
     throttle {
       # fix down with dynamic string
-      path        = "/commesse/GET"
+      path        = "/${aws_api_gateway_resource.commesse_list2.path_part}/${aws_api_gateway_method.commesse_list2.http_method}"
       burst_limit = "3"
       rate_limit  = "2"
     }
@@ -94,7 +94,8 @@ resource "aws_api_gateway_deployment" "default" {
     redeployment = sha1(jsonencode([
       aws_api_gateway_integration.default.id,
       aws_api_gateway_resource.commesse_list2.id,
-      aws_api_gateway_method.commesse_list2.id
+      aws_api_gateway_method.commesse_list2.id,
+      aws_api_gateway_usage_plan.default.id
     ]))
   }
 
