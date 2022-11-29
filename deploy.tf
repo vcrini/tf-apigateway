@@ -2,14 +2,14 @@ data "aws_api_gateway_rest_api" "primary" {
   name = var.api_id
 }
 
-data "aws_api_gateway_resource" "api" {
-  path        = "/api"
-  rest_api_id = data.aws_api_gateway_rest_api.primary.id
-}
+#data "aws_api_gateway_resource" "api" {
+#  path        = "/api"
+#  rest_api_id = data.aws_api_gateway_rest_api.primary.id
+#}
 resource "aws_api_gateway_resource" "commesse_list2" {
   rest_api_id = data.aws_api_gateway_rest_api.primary.id
-  parent_id   = data.aws_api_gateway_resource.api.id
-  #path_part   = "commesse-list-terraform"
+  # parent_id   = data.aws_api_gateway_resource.api.id
+  parent_id = data.aws_api_gateway_rest_api.primary.root_resource_id
   path_part = "commesse"
 }
 #GET
@@ -55,7 +55,8 @@ resource "aws_api_gateway_usage_plan" "default" {
     throttle {
       #path = "/api/commesse-list-terraform/GET"
       # fix down with dynamic string
-      path        = "/api/commesse/GET"
+      # path        = "/api/commesse/GET"
+      path        = "/commesse/GET"
       burst_limit = "3"
       rate_limit  = "2"
     }
@@ -111,5 +112,5 @@ resource "aws_api_gateway_deployment" "default" {
 resource "aws_api_gateway_stage" "default" {
   deployment_id = aws_api_gateway_deployment.default.id
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
-  stage_name    = "test2"
+  stage_name    = "api"
 }
