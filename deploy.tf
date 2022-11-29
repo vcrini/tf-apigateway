@@ -2,15 +2,10 @@ data "aws_api_gateway_rest_api" "primary" {
   name = var.api_id
 }
 
-#data "aws_api_gateway_resource" "api" {
-#  path        = "/api"
-#  rest_api_id = data.aws_api_gateway_rest_api.primary.id
-#}
 resource "aws_api_gateway_resource" "commesse_list2" {
   rest_api_id = data.aws_api_gateway_rest_api.primary.id
-  # parent_id   = data.aws_api_gateway_resource.api.id
-  parent_id = data.aws_api_gateway_rest_api.primary.root_resource_id
-  path_part = "commesse"
+  parent_id   = data.aws_api_gateway_rest_api.primary.root_resource_id
+  path_part   = "commesse"
 }
 #GET
 resource "aws_api_gateway_method" "commesse_list2" {
@@ -51,11 +46,9 @@ resource "aws_api_gateway_usage_plan" "default" {
   }
   api_stages {
     api_id = data.aws_api_gateway_rest_api.primary.id
-    stage  = aws_api_gateway_stage.default.stage_name
+    stage  = var.stage
     throttle {
-      #path = "/api/commesse-list-terraform/GET"
       # fix down with dynamic string
-      # path        = "/api/commesse/GET"
       path        = "/commesse/GET"
       burst_limit = "3"
       rate_limit  = "2"
@@ -72,7 +65,7 @@ resource "aws_api_gateway_integration" "default" {
   connection_type         = "VPC_LINK"
   connection_id           = var.vpc_link_id
   integration_http_method = "GET"
-  uri                     = "http://bitgdi-test-sandboxecs-inlb-c2ede020b1256ea8.elb.eu-west-1.amazonaws.com"
+  uri                     = "http://bitgdi-test-sandboxecs-inlb-c2ede020b1256ea8.elb.eu-west-1.amazonaws.com/${var.stage}/${aws_api_gateway_resource.commesse_list2.path_part}"
 }
 resource "aws_api_gateway_method_response" "response_200" {
   rest_api_id     = data.aws_api_gateway_rest_api.primary.id
@@ -112,5 +105,5 @@ resource "aws_api_gateway_deployment" "default" {
 resource "aws_api_gateway_stage" "default" {
   deployment_id = aws_api_gateway_deployment.default.id
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
-  stage_name    = "api"
+  stage_name    = var.stage
 }

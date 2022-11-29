@@ -37,6 +37,7 @@ No modules.
 | <a name="input_lb_name"></a> [lb\_name](#input\_lb\_name) | balancer name | `string` | n/a | yes |
 | <a name="input_listener_arn"></a> [listener\_arn](#input\_listener\_arn) | listener arn | `string` | `""` | no |
 | <a name="input_repository_name"></a> [repository\_name](#input\_repository\_name) | name of the repository inferred by directory name | `string` | n/a | yes |
+| <a name="input_stage"></a> [stage](#input\_stage) | name for stage | `string` | `"api"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | tag to be added | `map(any)` | <pre>{<br>  "Project": "FactoryDataHub"<br>}</pre> | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | id representing AWS Virtual Private Cloud | `string` | n/a | yes |
 | <a name="input_vpc_link_id"></a> [vpc\_link\_id](#input\_vpc\_link\_id) | virtual private cloud descriptor | `string` | n/a | yes |

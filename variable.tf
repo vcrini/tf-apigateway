@@ -25,6 +25,11 @@ variable "repository_name" {
 #  type        = string
 #  description = "ARN of the default SSL server certificate"
 #}
+variable "stage" {
+  default     = "api"
+  description = "name for stage"
+  type        = string
+}
 variable "tags" {
   default = {
     Project = "FactoryDataHub"
