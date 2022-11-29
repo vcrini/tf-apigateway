@@ -20,18 +20,20 @@ resource "aws_api_gateway_method" "commesse" {
   authorization        = "COGNITO_USER_POOLS"
   authorizer_id        = aws_api_gateway_authorizer.standard.id
   authorization_scopes = ["openid"]
-  #request_parameters = {
-  #  "method.request.path.commesse-list-terraform" = true
-  #}
 }
+#resource "aws_api_gateway_method" "probe" {
+#  rest_api_id   = data.aws_api_gateway_rest_api.primary.id
+#  resource_id   = aws_api_gateway_resource.probe.id
+#  http_method   = "GET"
+#  authorization        = "COGNITO_USER_POOLS"
+#  authorizer_id        = aws_api_gateway_authorizer.standard.id
+#  authorization_scopes = ["openid"]
+#}
 resource "aws_api_gateway_method" "probe" {
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
   resource_id   = aws_api_gateway_resource.probe.id
   http_method   = "GET"
   authorization = "NONE"
-  #request_parameters = {
-  #  "method.request.path.commesse-list-terraform" = true
-  #}
 }
 #cognito
 data "aws_cognito_user_pools" "standard" {
