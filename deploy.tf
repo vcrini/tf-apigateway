@@ -9,15 +9,17 @@ data "aws_api_gateway_resource" "api" {
 resource "aws_api_gateway_resource" "commesse_list2" {
   rest_api_id = data.aws_api_gateway_rest_api.primary.id
   parent_id   = data.aws_api_gateway_resource.api.id
-  path_part   = "commesse-list-terraform"
+  #path_part   = "commesse-list-terraform"
+  path_part = "commesse"
 }
 #GET
 resource "aws_api_gateway_method" "commesse_list2" {
-  rest_api_id   = data.aws_api_gateway_rest_api.primary.id
-  resource_id   = aws_api_gateway_resource.commesse_list2.id
-  http_method   = "GET"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.standard.id
+  rest_api_id          = data.aws_api_gateway_rest_api.primary.id
+  resource_id          = aws_api_gateway_resource.commesse_list2.id
+  http_method          = "GET"
+  authorization        = "COGNITO_USER_POOLS"
+  authorizer_id        = aws_api_gateway_authorizer.standard.id
+  authorization_scopes = ["openid"]
   #request_parameters = {
   #  "method.request.path.commesse-list-terraform" = true
   #}
@@ -37,15 +39,26 @@ resource "aws_api_gateway_usage_plan" "default" {
   description  = "my description"
   product_code = "MYCODE"
 
-  quota_settings {
-    limit  = 20
-    offset = 2
-    period = "WEEK"
-  }
+  #quota_settings {
+  #  limit  = 20
+  #  offset = 2
+  #  period = "WEEK"
+  #}
 
   throttle_settings {
     burst_limit = 5
     rate_limit  = 10
+  }
+  api_stages {
+    api_id = data.aws_api_gateway_rest_api.primary.id
+    stage  = aws_api_gateway_stage.default.stage_name
+    throttle {
+      #path = "/api/commesse-list-terraform/GET"
+      # fix down with dynamic string
+      path        = "/api/commesse/GET"
+      burst_limit = "3"
+      rate_limit  = "2"
+    }
   }
 
 }
@@ -72,16 +85,6 @@ resource "aws_api_gateway_integration_response" "default" {
   resource_id = aws_api_gateway_resource.commesse_list2.id
   http_method = aws_api_gateway_method.commesse_list2.http_method
   status_code = aws_api_gateway_method_response.response_200.status_code
-  #  # Transforms the backend JSON response to XML
-  #  response_templates = {
-  #    "application/xml" = <<EOF
-  ##set($inputRoot = $input.path('$'))
-  #<?xml version="1.0" encoding="UTF-8"?>
-  #<message>
-  #    $inputRoot.body
-  #</message>
-  #EOF
-  #}
 }
 resource "aws_api_gateway_deployment" "default" {
   rest_api_id = data.aws_api_gateway_rest_api.primary.id
@@ -96,6 +99,8 @@ resource "aws_api_gateway_deployment" "default" {
     #       It will stabilize to only change when resources change afterwards.
     redeployment = sha1(jsonencode([
       aws_api_gateway_integration.default.id,
+      aws_api_gateway_resource.commesse_list2.id,
+      aws_api_gateway_method.commesse_list2.id
     ]))
   }
 
