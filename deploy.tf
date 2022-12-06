@@ -53,7 +53,7 @@ resource "aws_api_gateway_usage_plan" "default" {
   }
   api_stages {
     api_id = data.aws_api_gateway_rest_api.primary.id
-    stage  = var.stage
+    stage  = var.api_gateway["stage"]
     throttle {
       # commesse
       path        = "/${aws_api_gateway_resource.commesse.path_part}/${aws_api_gateway_method.commesse.http_method}"
@@ -77,7 +77,7 @@ resource "aws_api_gateway_integration" "commesse" {
   connection_type         = "VPC_LINK"
   connection_id           = var.api_gateway["vpc_link_id"]
   integration_http_method = "GET"
-  uri                     = "${var.api_gateway["gateway_integration_uri"]}/${var.stage}/${aws_api_gateway_resource.commesse.path_part}"
+  uri                     = "${var.api_gateway["gateway_integration_uri"]}/${var.api_gateway["stage"]}/${aws_api_gateway_resource.commesse.path_part}"
 }
 resource "aws_api_gateway_integration" "probe" {
   http_method             = aws_api_gateway_method.probe.http_method
@@ -87,7 +87,7 @@ resource "aws_api_gateway_integration" "probe" {
   connection_type         = "VPC_LINK"
   connection_id           = var.api_gateway["vpc_link_id"]
   integration_http_method = "GET"
-  uri                     = "${var.api_gateway["gateway_integration_uri"]}/${var.stage}/${aws_api_gateway_resource.probe.path_part}"
+  uri                     = "${var.api_gateway["gateway_integration_uri"]}/${var.api_gateway["stage"]}/${aws_api_gateway_resource.probe.path_part}"
 }
 resource "aws_api_gateway_method_response" "response_200" {
   rest_api_id     = data.aws_api_gateway_rest_api.primary.id
@@ -130,5 +130,5 @@ resource "aws_api_gateway_deployment" "default" {
 resource "aws_api_gateway_stage" "default" {
   deployment_id = aws_api_gateway_deployment.default.id
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
-  stage_name    = var.stage
+  stage_name    = var.api_gateway["stage"]
 }
