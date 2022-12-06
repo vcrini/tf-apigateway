@@ -21,14 +21,6 @@ resource "aws_api_gateway_method" "commesse" {
   authorizer_id        = aws_api_gateway_authorizer.standard.id
   authorization_scopes = ["openid"]
 }
-#resource "aws_api_gateway_method" "probe" {
-#  rest_api_id   = data.aws_api_gateway_rest_api.primary.id
-#  resource_id   = aws_api_gateway_resource.probe.id
-#  http_method   = "GET"
-#  authorization        = "COGNITO_USER_POOLS"
-#  authorizer_id        = aws_api_gateway_authorizer.standard.id
-#  authorization_scopes = ["openid"]
-#}
 resource "aws_api_gateway_method" "probe" {
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
   resource_id   = aws_api_gateway_resource.probe.id
@@ -76,20 +68,9 @@ resource "aws_api_gateway_usage_plan" "default" {
       rate_limit  = "1"
     }
   }
-  # api_stages {
-  #   api_id = data.aws_api_gateway_rest_api.primary.id
-  #   stage  = var.stage
-  #   throttle {
-  #     # probe
-  #     path        = "/${aws_api_gateway_resource.probe.path_part}/${aws_api_gateway_method.probe.http_method}"
-  #     burst_limit = "1"
-  #     rate_limit  = "1"
-  #   }
-  # }
-
 }
 
-resource "aws_api_gateway_integration" "default" {
+resource "aws_api_gateway_integration" "commesse" {
   http_method             = aws_api_gateway_method.commesse.http_method
   resource_id             = aws_api_gateway_resource.commesse.id
   rest_api_id             = data.aws_api_gateway_rest_api.primary.id
@@ -134,7 +115,7 @@ resource "aws_api_gateway_deployment" "default" {
     #       resources will show a difference after the initial implementation.
     #       It will stabilize to only change when resources change afterwards.
     redeployment = sha1(jsonencode([
-      aws_api_gateway_integration.default.id,
+      aws_api_gateway_integration.commesse.id,
       aws_api_gateway_integration.probe.id,
       aws_api_gateway_resource.commesse.id,
       aws_api_gateway_method.commesse.id,
