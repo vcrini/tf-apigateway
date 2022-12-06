@@ -32,7 +32,7 @@ data "aws_cognito_user_pools" "standard" {
   name = "bitgdi-test-cognito"
 }
 resource "aws_api_gateway_authorizer" "standard" {
-  name          = "bitgdi-test-authz-test"
+  name          = var.cognito_name
   type          = "COGNITO_USER_POOLS"
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
   provider_arns = data.aws_cognito_user_pools.standard.arns

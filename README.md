@@ -36,6 +36,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_api_id"></a> [api\_id](#input\_api\_id) | id for the reply's created api | `string` | n/a | yes |
+| <a name="input_cognito_name"></a> [cognito\_name](#input\_cognito\_name) | name of cognito authorizer | `string` | n/a | yes |
 | <a name="input_deploy_environment"></a> [deploy\_environment](#input\_deploy\_environment) | test or prod environment | `string` | n/a | yes |
 | <a name="input_lb_name"></a> [lb\_name](#input\_lb\_name) | balancer name | `string` | n/a | yes |
 | <a name="input_listener_arn"></a> [listener\_arn](#input\_listener\_arn) | listener arn | `string` | `""` | no |

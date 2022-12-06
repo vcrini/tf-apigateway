@@ -3,6 +3,10 @@ variable "api_id" {
   description = "id for the reply's created api"
   type        = string
 }
+variable "cognito_name" {
+  description = "name of cognito authorizer"
+  type        = string
+}
 variable "deploy_environment" {
   description = "test or prod environment"
   type        = string
