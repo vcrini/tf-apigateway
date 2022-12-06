@@ -29,7 +29,7 @@ resource "aws_api_gateway_method" "probe" {
 }
 #cognito
 data "aws_cognito_user_pools" "standard" {
-  name = "bitgdi-test-cognito"
+  name = var.cognito_user_pool_name
 }
 resource "aws_api_gateway_authorizer" "standard" {
   name          = var.cognito_name

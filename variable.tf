@@ -3,6 +3,10 @@ variable "api_id" {
   description = "id for the reply's created api"
   type        = string
 }
+variable "cognito_user_pool_name" {
+  description = "name of cognito user pool"
+  type        = string
+}
 variable "cognito_name" {
   description = "name of cognito authorizer"
   type        = string
