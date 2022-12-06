@@ -1,5 +1,5 @@
 data "aws_api_gateway_rest_api" "primary" {
-  name = var.api_id
+  name = var.api_gateway["api_id"]
 }
 
 resource "aws_api_gateway_resource" "commesse" {
@@ -27,12 +27,11 @@ resource "aws_api_gateway_method" "probe" {
   http_method   = "GET"
   authorization = "NONE"
 }
-#cognito
 data "aws_cognito_user_pools" "standard" {
-  name = var.cognito_user_pool_name
+  name = var.api_gateway["cognito_user_pool_name"]
 }
 resource "aws_api_gateway_authorizer" "standard" {
-  name          = var.cognito_name
+  name          = var.api_gateway["cognito_name"]
   type          = "COGNITO_USER_POOLS"
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
   provider_arns = data.aws_cognito_user_pools.standard.arns
@@ -49,8 +48,8 @@ resource "aws_api_gateway_usage_plan" "default" {
   #}
 
   throttle_settings {
-    burst_limit = 5
-    rate_limit  = 10
+    burst_limit = var.api_gateway["throttle"]["global"]["burst"]
+    rate_limit  = var.api_gateway["throttle"]["global"]["rate"]
   }
   api_stages {
     api_id = data.aws_api_gateway_rest_api.primary.id
@@ -58,14 +57,14 @@ resource "aws_api_gateway_usage_plan" "default" {
     throttle {
       # commesse
       path        = "/${aws_api_gateway_resource.commesse.path_part}/${aws_api_gateway_method.commesse.http_method}"
-      burst_limit = "3"
-      rate_limit  = "2"
+      burst_limit = var.api_gateway["throttle"]["commesse"]["burst"]
+      rate_limit  = var.api_gateway["throttle"]["commesse"]["rate"]
     }
     throttle {
       # probe
       path        = "/${aws_api_gateway_resource.probe.path_part}/${aws_api_gateway_method.probe.http_method}"
-      burst_limit = "1"
-      rate_limit  = "1"
+      burst_limit = var.api_gateway["throttle"]["probe"]["burst"]
+      rate_limit  = var.api_gateway["throttle"]["probe"]["rate"]
     }
   }
 }
@@ -76,9 +75,9 @@ resource "aws_api_gateway_integration" "commesse" {
   rest_api_id             = data.aws_api_gateway_rest_api.primary.id
   type                    = "HTTP_PROXY"
   connection_type         = "VPC_LINK"
-  connection_id           = var.vpc_link_id
+  connection_id           = var.api_gateway["vpc_link_id"]
   integration_http_method = "GET"
-  uri                     = "http://bitgdi-test-sandboxecs-inlb-c2ede020b1256ea8.elb.eu-west-1.amazonaws.com/${var.stage}/${aws_api_gateway_resource.commesse.path_part}"
+  uri                     = "${var.api_gateway["gateway_integration_uri"]}/${var.stage}/${aws_api_gateway_resource.commesse.path_part}"
 }
 resource "aws_api_gateway_integration" "probe" {
   http_method             = aws_api_gateway_method.probe.http_method
@@ -86,9 +85,9 @@ resource "aws_api_gateway_integration" "probe" {
   rest_api_id             = data.aws_api_gateway_rest_api.primary.id
   type                    = "HTTP_PROXY"
   connection_type         = "VPC_LINK"
-  connection_id           = var.vpc_link_id
+  connection_id           = var.api_gateway["vpc_link_id"]
   integration_http_method = "GET"
-  uri                     = "http://bitgdi-test-sandboxecs-inlb-c2ede020b1256ea8.elb.eu-west-1.amazonaws.com/${var.stage}/${aws_api_gateway_resource.probe.path_part}"
+  uri                     = "${var.api_gateway["gateway_integration_uri"]}/${var.stage}/${aws_api_gateway_resource.probe.path_part}"
 }
 resource "aws_api_gateway_method_response" "response_200" {
   rest_api_id     = data.aws_api_gateway_rest_api.primary.id

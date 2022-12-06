@@ -1,15 +1,7 @@
-
-variable "api_id" {
-  description = "id for the reply's created api"
-  type        = string
-}
-variable "cognito_user_pool_name" {
-  description = "name of cognito user pool"
-  type        = string
-}
-variable "cognito_name" {
-  description = "name of cognito authorizer"
-  type        = string
+variable "api_gateway" {
+  default     = null
+  description = "values passed to setup api endpoint"
+  type        = any
 }
 variable "deploy_environment" {
   description = "test or prod environment"
@@ -45,13 +37,3 @@ variable "tags" {
   description = "tag to be added"
   type        = map(any)
 }
-variable "vpc_id" {
-  description = "id representing AWS Virtual Private Cloud"
-  type        = string
-}
-
-variable "vpc_link_id" {
-  type        = string
-  description = "virtual private cloud descriptor"
-}
-

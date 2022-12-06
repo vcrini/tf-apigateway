@@ -35,17 +35,13 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_api_id"></a> [api\_id](#input\_api\_id) | id for the reply's created api | `string` | n/a | yes |
-| <a name="input_cognito_name"></a> [cognito\_name](#input\_cognito\_name) | name of cognito authorizer | `string` | n/a | yes |
-| <a name="input_cognito_user_pool_name"></a> [cognito\_user\_pool\_name](#input\_cognito\_user\_pool\_name) | name of cognito user pool | `string` | n/a | yes |
+| <a name="input_api_gateway"></a> [api\_gateway](#input\_api\_gateway) | values passed to setup api endpoint | `any` | `null` | no |
 | <a name="input_deploy_environment"></a> [deploy\_environment](#input\_deploy\_environment) | test or prod environment | `string` | n/a | yes |
 | <a name="input_lb_name"></a> [lb\_name](#input\_lb\_name) | balancer name | `string` | n/a | yes |
 | <a name="input_listener_arn"></a> [listener\_arn](#input\_listener\_arn) | listener arn | `string` | `""` | no |
 | <a name="input_repository_name"></a> [repository\_name](#input\_repository\_name) | name of the repository inferred by directory name | `string` | n/a | yes |
 | <a name="input_stage"></a> [stage](#input\_stage) | name for stage | `string` | `"api"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | tag to be added | `map(any)` | <pre>{<br>  "Project": "FactoryDataHub"<br>}</pre> | no |
-| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | id representing AWS Virtual Private Cloud | `string` | n/a | yes |
-| <a name="input_vpc_link_id"></a> [vpc\_link\_id](#input\_vpc\_link\_id) | virtual private cloud descriptor | `string` | n/a | yes |
 
 ## Outputs
 
