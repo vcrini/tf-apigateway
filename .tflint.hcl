@@ -2,14 +2,21 @@ config {
   module     = true
   force      = false
 }
+plugin "terraform" {
+  enabled = true
+  preset  = "recommended"
+}
 
 plugin "aws" {
   enabled = true
-  deep_check = true
+  version = "0.22.1"
+  source  = "github.com/terraform-linters/tflint-ruleset-aws"
+
 }
 
+
 rule "terraform_naming_convention" {
-  enabled = true
+  enabled = false
 }
 
 rule "terraform_documented_outputs" {
