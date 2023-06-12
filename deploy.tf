@@ -19,7 +19,7 @@ resource "aws_api_gateway_method" "commesse" {
   http_method          = "GET"
   authorization        = "COGNITO_USER_POOLS"
   authorizer_id        = aws_api_gateway_authorizer.standard.id
-  authorization_scopes = ["openid"]
+  authorization_scopes = ["https://gdh-sandbox.datahub.gucci/commesse.read", "openid"]
 }
 resource "aws_api_gateway_method" "probe" {
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
@@ -131,4 +131,20 @@ resource "aws_api_gateway_stage" "default" {
   deployment_id = aws_api_gateway_deployment.default.id
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
   stage_name    = var.api_gateway["stage"]
+  access_log_settings {
+    destination_arn = var.api_gateway["access_log_settings_destination_arn"]
+    format          = var.api_gateway["access_log_settings_format"]
+  }
+}
+#added
+resource "aws_api_gateway_method_settings" "default" {
+  rest_api_id = data.aws_api_gateway_rest_api.primary.id
+  stage_name  = var.api_gateway["stage"]
+  method_path = "*/*"
+
+  settings {
+    metrics_enabled    = true
+    logging_level      = "INFO"
+    data_trace_enabled = true
+  }
 }
