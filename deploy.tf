@@ -147,4 +147,40 @@ resource "aws_api_gateway_method_settings" "default" {
     logging_level      = "INFO"
     data_trace_enabled = true
   }
+  depends_on = [aws_api_gateway_usage_plan.default]
+}
+data "aws_iam_policy_document" "default" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions   = ["execute-api:Invoke"]
+    resources = ["${data.aws_api_gateway_rest_api.primary.execution_arn}/*"]
+
+  }
+  statement {
+    effect = "Deny"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions   = ["execute-api:Invoke"]
+    resources = ["${data.aws_api_gateway_rest_api.primary.execution_arn}/*"]
+
+    condition {
+      test     = "StringNotEquals"
+      variable = "aws:SourceVpce"
+      values   = [var.api_gateway["vpc_endpoint_id"]]
+    }
+  }
+}
+resource "aws_api_gateway_rest_api_policy" "test" {
+  rest_api_id = data.aws_api_gateway_rest_api.primary.id
+  policy      = data.aws_iam_policy_document.default.json
 }
