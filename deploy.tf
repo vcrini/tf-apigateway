@@ -19,7 +19,8 @@ resource "aws_api_gateway_method" "commesse" {
   http_method          = "GET"
   authorization        = "COGNITO_USER_POOLS"
   authorizer_id        = aws_api_gateway_authorizer.standard.id
-  authorization_scopes = ["https://gdh-sandbox.datahub.gucci/commesse.read", "openid"]
+  authorization_scopes = var.api_gateway["authorization_scopes"]
+
 }
 resource "aws_api_gateway_method" "probe" {
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
@@ -39,7 +40,7 @@ resource "aws_api_gateway_authorizer" "standard" {
 resource "aws_api_gateway_usage_plan" "default" {
   name         = "default"
   description  = "used for commesse and probe"
-  product_code = "MYCODE"
+  product_code = "MYCODE" # TODO check if can be removed
 
   #quota_settings {
   #  limit  = 20
@@ -79,6 +80,14 @@ resource "aws_api_gateway_integration" "commesse" {
   integration_http_method = "GET"
   uri                     = "${var.api_gateway["gateway_integration_uri"]}/${var.api_gateway["stage"]}/${aws_api_gateway_resource.commesse.path_part}"
 }
+# resource "null_resource" "method-delay" {
+#   provisioner "local-exec" {
+#     command = "sleep 5"
+#   }
+#   triggers = {
+#     response = aws_api_gateway_integration.commesse.id
+#   }
+# }
 resource "aws_api_gateway_integration" "probe" {
   http_method             = aws_api_gateway_method.probe.http_method
   resource_id             = aws_api_gateway_resource.probe.id
