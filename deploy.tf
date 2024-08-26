@@ -2,51 +2,39 @@ data "aws_api_gateway_rest_api" "primary" {
   name = var.api_gateway["api_id"]
 }
 
-resource "aws_api_gateway_resource" "commesse" {
+resource "aws_api_gateway_resource" "resource" {
+  for_each    = var.api_gateway["resources"]
   rest_api_id = data.aws_api_gateway_rest_api.primary.id
   parent_id   = data.aws_api_gateway_rest_api.primary.root_resource_id
-  path_part   = "commesse"
+  path_part   = each.key
 }
-resource "aws_api_gateway_resource" "probe" {
-  rest_api_id = data.aws_api_gateway_rest_api.primary.id
-  parent_id   = data.aws_api_gateway_rest_api.primary.root_resource_id
-  path_part   = "probe"
-}
-#GET
-resource "aws_api_gateway_method" "commesse" {
+resource "aws_api_gateway_method" "resource" {
+  for_each             = var.api_gateway["resources"]
   rest_api_id          = data.aws_api_gateway_rest_api.primary.id
-  resource_id          = aws_api_gateway_resource.commesse.id
-  http_method          = "GET"
-  authorization        = "COGNITO_USER_POOLS"
-  authorizer_id        = aws_api_gateway_authorizer.standard.id
-  authorization_scopes = var.api_gateway["authorization_scopes"]
+  resource_id          = aws_api_gateway_resource.resource[each.key].id
+  http_method          = var.api_gateway["resources"][each.key]["http_method"]
+  authorization        = var.api_gateway["resources"][each.key]["authorization"]
+  authorizer_id        = var.api_gateway["authorizer"] == "cognito" || var.api_gateway["authorizer"] == "lambda" ? data.aws_api_gateway_authorizer.standard.id : null
+  authorization_scopes = var.api_gateway["authorizer"] == "cognito" ? var.api_gateway["authorization_scopes"] : null
 
-}
-resource "aws_api_gateway_method" "probe" {
-  rest_api_id   = data.aws_api_gateway_rest_api.primary.id
-  resource_id   = aws_api_gateway_resource.probe.id
-  http_method   = "GET"
-  authorization = "NONE"
 }
 data "aws_cognito_user_pools" "standard" {
-  name = var.api_gateway["cognito_user_pool_name"]
+  for_each = var.api_gateway["authorizer"] == "cognito" ? toset(["0"]) : toset([])
+  name     = var.api_gateway["authorizer_user_pool_name"]
 }
-resource "aws_api_gateway_authorizer" "standard" {
-  name          = var.api_gateway["cognito_name"]
-  type          = "COGNITO_USER_POOLS"
+data "aws_lambda_function" "authorizer" {
+  for_each      = var.api_gateway["authorizer"] == "lambda" ? toset(["0"]) : toset([])
+  function_name = var.api_gateway["authorizer_user_pool_name"]
+}
+data "aws_api_gateway_authorizer" "standard" {
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
-  provider_arns = data.aws_cognito_user_pools.standard.arns
+  authorizer_id = data.aws_api_gateway_authorizers.standard.ids[0]
+}
+data "aws_api_gateway_authorizers" "standard" {
+  rest_api_id = data.aws_api_gateway_rest_api.primary.id
 }
 resource "aws_api_gateway_usage_plan" "default" {
-  name         = "default"
-  description  = "used for commesse and probe"
-  product_code = "MYCODE" # TODO check if can be removed
-
-  #quota_settings {
-  #  limit  = 20
-  #  offset = 2
-  #  period = "WEEK"
-  #}
+  name = data.aws_api_gateway_rest_api.primary.name
 
   throttle_settings {
     burst_limit = var.api_gateway["throttle"]["global"]["burst"]
@@ -55,61 +43,43 @@ resource "aws_api_gateway_usage_plan" "default" {
   api_stages {
     api_id = data.aws_api_gateway_rest_api.primary.id
     stage  = var.api_gateway["stage"]
-    throttle {
-      # commesse
-      path        = "/${aws_api_gateway_resource.commesse.path_part}/${aws_api_gateway_method.commesse.http_method}"
-      burst_limit = var.api_gateway["throttle"]["commesse"]["burst"]
-      rate_limit  = var.api_gateway["throttle"]["commesse"]["rate"]
-    }
-    throttle {
-      # probe
-      path        = "/${aws_api_gateway_resource.probe.path_part}/${aws_api_gateway_method.probe.http_method}"
-      burst_limit = var.api_gateway["throttle"]["probe"]["burst"]
-      rate_limit  = var.api_gateway["throttle"]["probe"]["rate"]
+    dynamic "throttle" {
+      for_each = var.api_gateway["resources"]
+      content {
+        path        = "/${aws_api_gateway_resource.resource[throttle.key].path_part}/${aws_api_gateway_method.resource[throttle.key].http_method}"
+        burst_limit = var.api_gateway["resources"][throttle.key]["throttle"]["burst"]
+        rate_limit  = var.api_gateway["resources"][throttle.key]["throttle"]["rate"]
+
+      }
     }
   }
 }
 
-resource "aws_api_gateway_integration" "commesse" {
-  http_method             = aws_api_gateway_method.commesse.http_method
-  resource_id             = aws_api_gateway_resource.commesse.id
+resource "aws_api_gateway_integration" "resource" {
+  for_each                = var.api_gateway["resources"]
+  http_method             = aws_api_gateway_method.resource[each.key].http_method
+  resource_id             = aws_api_gateway_resource.resource[each.key].id
   rest_api_id             = data.aws_api_gateway_rest_api.primary.id
   type                    = "HTTP_PROXY"
   connection_type         = "VPC_LINK"
   connection_id           = var.api_gateway["vpc_link_id"]
-  integration_http_method = "GET"
-  uri                     = "${var.api_gateway["gateway_integration_uri"]}/${var.api_gateway["stage"]}/${aws_api_gateway_resource.commesse.path_part}"
+  integration_http_method = aws_api_gateway_method.resource[each.key].http_method
+  uri                     = "${var.api_gateway["gateway_integration_uri"]}/${var.api_gateway["stage"]}/${aws_api_gateway_resource.resource[each.key].path_part}"
 }
-# resource "null_resource" "method-delay" {
-#   provisioner "local-exec" {
-#     command = "sleep 5"
-#   }
-#   triggers = {
-#     response = aws_api_gateway_integration.commesse.id
-#   }
-# }
-resource "aws_api_gateway_integration" "probe" {
-  http_method             = aws_api_gateway_method.probe.http_method
-  resource_id             = aws_api_gateway_resource.probe.id
-  rest_api_id             = data.aws_api_gateway_rest_api.primary.id
-  type                    = "HTTP_PROXY"
-  connection_type         = "VPC_LINK"
-  connection_id           = var.api_gateway["vpc_link_id"]
-  integration_http_method = "GET"
-  uri                     = "${var.api_gateway["gateway_integration_uri"]}/${var.api_gateway["stage"]}/${aws_api_gateway_resource.probe.path_part}"
-}
-resource "aws_api_gateway_method_response" "response_200" {
+resource "aws_api_gateway_method_response" "resource" {
+  for_each        = var.api_gateway["resources"]
   rest_api_id     = data.aws_api_gateway_rest_api.primary.id
-  resource_id     = aws_api_gateway_resource.commesse.id
-  http_method     = aws_api_gateway_method.commesse.http_method
-  status_code     = "200"
+  resource_id     = aws_api_gateway_resource.resource[each.key].id
+  http_method     = aws_api_gateway_method.resource[each.key].http_method
+  status_code     = var.api_gateway["resources"][each.key]["status_code"]
   response_models = { "application/json" : "Empty" }
 }
-resource "aws_api_gateway_integration_response" "default" {
+resource "aws_api_gateway_integration_response" "resource" {
+  for_each    = var.api_gateway["resources"]
   rest_api_id = data.aws_api_gateway_rest_api.primary.id
-  resource_id = aws_api_gateway_resource.commesse.id
-  http_method = aws_api_gateway_method.commesse.http_method
-  status_code = aws_api_gateway_method_response.response_200.status_code
+  resource_id = aws_api_gateway_resource.resource[each.key].id
+  http_method = aws_api_gateway_method.resource[each.key].http_method
+  status_code = aws_api_gateway_method_response.resource[each.key].status_code
 }
 resource "aws_api_gateway_deployment" "default" {
   rest_api_id = data.aws_api_gateway_rest_api.primary.id
@@ -123,12 +93,16 @@ resource "aws_api_gateway_deployment" "default" {
     #       resources will show a difference after the initial implementation.
     #       It will stabilize to only change when resources change afterwards.
     redeployment = sha1(jsonencode([
-      aws_api_gateway_integration.commesse.id,
-      aws_api_gateway_integration.probe.id,
-      aws_api_gateway_resource.commesse.id,
-      aws_api_gateway_method.commesse.id,
-      aws_api_gateway_resource.probe.id,
-      aws_api_gateway_method.probe.id
+      # aws_api_gateway_integration.probe.id,
+      # aws_api_gateway_resource.probe.id,
+      # aws_api_gateway_method.probe.id,
+      aws_api_gateway_resource.resource,
+      #  needed to avoid Provider produced inconsistent final plan (not true)
+      # aws_api_gateway_method.resource,
+      aws_api_gateway_integration.resource,
+      aws_api_gateway_method_response.resource,
+      # maybe is not needed
+      aws_api_gateway_integration_response.resource
     ]))
   }
 
@@ -157,39 +131,4 @@ resource "aws_api_gateway_method_settings" "default" {
     data_trace_enabled = true
   }
   depends_on = [aws_api_gateway_usage_plan.default]
-}
-data "aws_iam_policy_document" "default" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-
-    actions   = ["execute-api:Invoke"]
-    resources = ["${data.aws_api_gateway_rest_api.primary.execution_arn}/*"]
-
-  }
-  statement {
-    effect = "Deny"
-
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-
-    actions   = ["execute-api:Invoke"]
-    resources = ["${data.aws_api_gateway_rest_api.primary.execution_arn}/*"]
-
-    condition {
-      test     = "StringNotEquals"
-      variable = "aws:SourceVpce"
-      values   = [var.api_gateway["vpc_endpoint_id"]]
-    }
-  }
-}
-resource "aws_api_gateway_rest_api_policy" "test" {
-  rest_api_id = data.aws_api_gateway_rest_api.primary.id
-  policy      = data.aws_iam_policy_document.default.json
 }
