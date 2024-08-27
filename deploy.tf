@@ -16,6 +16,12 @@ resource "aws_api_gateway_method" "resource" {
   authorization        = var.api_gateway["resources"][each.key]["authorization"]
   authorizer_id        = var.api_gateway["authorizer"] == "cognito" || var.api_gateway["authorizer"] == "lambda" ? data.aws_api_gateway_authorizer.standard.id : null
   authorization_scopes = var.api_gateway["authorizer"] == "cognito" ? var.api_gateway["authorization_scopes"] : null
+  #needed to add to recreate everytime the resource
+  lifecycle {
+    ignore_changes = [
+      authorizer_id,
+    ]
+  }
 }
 data "aws_api_gateway_authorizer" "standard" {
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
@@ -76,23 +82,11 @@ resource "aws_api_gateway_deployment" "default" {
   rest_api_id = data.aws_api_gateway_rest_api.primary.id
 
   triggers = {
-    # NOTE: The configuration below will satisfy ordering considerations,
-    #       but not pick up all future REST API changes. More advanced patterns
-    #       are possible, such as using the filesha1() function against the
-    #       Terraform configuration file(s) or removing the .id references to
-    #       calculate a hash against whole resources. Be aware that using whole
-    #       resources will show a difference after the initial implementation.
-    #       It will stabilize to only change when resources change afterwards.
     redeployment = sha1(jsonencode([
-      # aws_api_gateway_integration.probe.id,
-      # aws_api_gateway_resource.probe.id,
-      # aws_api_gateway_method.probe.id,
       aws_api_gateway_resource.resource,
-      #  needed to avoid Provider produced inconsistent final plan (not true)
-      # aws_api_gateway_method.resource,
+      aws_api_gateway_method.resource,
       aws_api_gateway_integration.resource,
       aws_api_gateway_method_response.resource,
-      # maybe is not needed
       aws_api_gateway_integration_response.resource
     ]))
   }
