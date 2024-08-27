@@ -16,15 +16,6 @@ resource "aws_api_gateway_method" "resource" {
   authorization        = var.api_gateway["resources"][each.key]["authorization"]
   authorizer_id        = var.api_gateway["authorizer"] == "cognito" || var.api_gateway["authorizer"] == "lambda" ? data.aws_api_gateway_authorizer.standard.id : null
   authorization_scopes = var.api_gateway["authorizer"] == "cognito" ? var.api_gateway["authorization_scopes"] : null
-
-}
-data "aws_cognito_user_pools" "standard" {
-  for_each = var.api_gateway["authorizer"] == "cognito" ? toset(["0"]) : toset([])
-  name     = var.api_gateway["authorizer_user_pool_name"]
-}
-data "aws_lambda_function" "authorizer" {
-  for_each      = var.api_gateway["authorizer"] == "lambda" ? toset(["0"]) : toset([])
-  function_name = var.api_gateway["authorizer_user_pool_name"]
 }
 data "aws_api_gateway_authorizer" "standard" {
   rest_api_id   = data.aws_api_gateway_rest_api.primary.id
