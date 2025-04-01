@@ -17,7 +17,8 @@ resource "aws_api_gateway_method" "resource" {
   rest_api_id          = data.aws_api_gateway_rest_api.primary.id
   resource_id          = aws_api_gateway_resource.resource[each.key].id
   http_method          = var.api_gateway["resources"][each.key]["http_method"]
-  authorization        = var.api_gateway["resources"][each.key]["authorization"]
+  api_key_required     = var.api_gateway["authorizer"] == "apikey" && var.api_gateway["resources"][each.key]["authorization"] == "apikey_active" ? true : false
+  authorization        = var.api_gateway["resources"][each.key]["authorization"] == "apikey_active" ? "NONE" : var.api_gateway["resources"][each.key]["authorization"]
   authorizer_id        = var.api_gateway["authorizer"] == "cognito" || var.api_gateway["authorizer"] == "lambda" ? data.aws_api_gateway_authorizer.standard.id : null
   authorization_scopes = var.api_gateway["authorizer"] == "cognito" && var.api_gateway["resources"][each.key]["authorization"] == "COGNITO_USER_POOLS" ? lookup(var.api_gateway, "authorization_scopes", null) : null
   #needed to add to recreate everytime the resource
